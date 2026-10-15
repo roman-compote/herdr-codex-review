@@ -14,11 +14,11 @@ you: "prepare a plan for X"
      └─ up to 3 rounds (same Codex session) → final plan → waits for your go-ahead
 ```
 
-![Claude Code (left) wrote a plan; Codex (right) reviews it read-only in a herdr pane](docs/screenshot.png)
+![Claude Code (left) summarises the reviewed plan; Codex (right) approves it in its own herdr pane](docs/screenshot.png)
 
-*Left: Claude Code wrote the plan, and reports that Codex approved it in round 2 after six changes.
-Right: Codex reviewing the plan in its own herdr pane. Recorded before the skill was renamed, so it
-shows the old names `/plan-review` and `plan-reviewer` (now `/codex-review` and `codex-review-<pane>`).*
+*Asked for a `--shout` flag, Claude drafted a plan. In round 1 Codex found that switching to argparse
+would break existing commands, so Claude revised the plan and logged each decision. Codex (right)
+approved round 2. Claude rejected one suggestion with a reason and left a real choice to the user.*
 
 Two different models catch different mistakes: wrong assumptions about the code, missing steps,
 risky migrations, missing tests. You only see the plan after they agree, or after Claude has written
