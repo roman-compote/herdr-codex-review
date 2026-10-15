@@ -14,6 +14,12 @@ you: "prepare a plan for X"
      └─ up to 3 rounds (same Codex session) → final plan → waits for your go-ahead
 ```
 
+![Claude Code (left) wrote a plan; Codex (right) reviews it read-only in a herdr pane](docs/screenshot.png)
+
+*Left: Claude Code wrote the plan, and reports that Codex approved it in round 2 after six changes.
+Right: Codex reviewing the plan in its own herdr pane. Recorded before the skill was renamed, so it
+shows the old names `/plan-review` and `plan-reviewer` (now `/codex-review` and `codex-review-<pane>`).*
+
 Two different models catch different mistakes: wrong assumptions about the code, missing steps,
 risky migrations, missing tests. You only see the plan after they agree, or after Claude has written
 down why it disagrees.
