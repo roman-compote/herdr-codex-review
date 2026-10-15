@@ -107,7 +107,7 @@ If your Bash tool runs in a sandbox, the throwaway herdr server inherits it, and
 
 Tell the person:
 
-1. Open a project, start `herdr`, and start a **new** `claude` session in a herdr pane.
+1. Start `herdr`, `cd` into a project, and start a **new** `claude` session there (not in `~`).
 2. Ask: *"Prepare a plan for …"*, or use `/codex-review …`.
 3. A Codex pane opens on the right; reviews land in `.claude/plans/`. The first time in each repo,
    Codex asks whether to trust the folder; they answer that in the Codex pane. Optionally add `.claude/plans/`
@@ -120,6 +120,7 @@ Tell the person:
 | `CODEX_REVIEW_AGENT` | `codex-review-<caller pane>` | Use a specific herdr agent name as the reviewer |
 | `CODEX_REVIEW_TIMEOUT_MS` | `900000` (15 min) | Max time per review round |
 | `CODEX_REVIEW_CODEX_ARGS` | empty | Extra Codex args, e.g. `-m <model>` |
+| `CODEX_REVIEW_ALLOW_HOME` | unset | `1` allows the home folder as project root (refused by default) |
 
 ## Troubleshooting
 
@@ -131,6 +132,7 @@ Tell the person:
 | Exit 3, other dialog | Codex is waiting in its pane (e.g. login). The person handles it, then Claude re-runs the round. |
 | Exit 4, "no review came back" | Codex never answered (e.g. hit its usage limit). Look at the Codex pane. |
 | Exit 6 | A dependency is missing from PATH. |
+| Exit 7, "refusing to review: the project root would be …" | Claude was started in the home folder. Start it inside the project the plan is for. Otherwise Codex would search the whole home folder. |
 | Skill doesn't trigger | Start a new Claude session after installing; or use `/codex-review` explicitly. |
 | Codex pane left over | It's reused for the next plan from the same Claude pane. Close it to start fresh. |
 

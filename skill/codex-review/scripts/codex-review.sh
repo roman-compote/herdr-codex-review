@@ -15,9 +15,11 @@
 #
 # Exit codes: 0 review printed · 2 usage · 3 reviewer blocked at a dialog
 #             4 no review came back · 5 could not start Codex · 6 missing dependency
+#             7 refused: the project root would be the home folder (or /)
 #
 # Env: CODEX_REVIEW_AGENT (agent name) · CODEX_REVIEW_TIMEOUT_MS (per round, default 15 min)
 #      CODEX_REVIEW_CODEX_ARGS (extra Codex args, e.g. "-m gpt-5")
+#      CODEX_REVIEW_ALLOW_HOME=1 (allow the home folder as project root; Codex may then search all of it)
 set -euo pipefail
 
 PLAN=${1:?usage: codex-review.sh <plan-file> [round]}
@@ -44,6 +46,14 @@ AGENT=${CODEX_REVIEW_AGENT:-${DEFAULT_AGENT:0:32}}
 [ -f "$PLAN" ] || { echo "plan file not found: $PLAN" >&2; exit 2; }
 PLAN=$(cd "$(dirname "$PLAN")" && pwd)/$(basename "$PLAN")
 ROOT=$(git -C "$(dirname "$PLAN")" rev-parse --show-toplevel 2>/dev/null || pwd)
+# With the home folder (or /) as the root, Codex would search everything in it: slow, and it
+# exposes unrelated private files to the reviewer. Plans belong to a project.
+real() { (cd "$1" 2>/dev/null && pwd -P); }
+if { [ "$(real "$ROOT")" = "$(real "$HOME")" ] || [ "$(real "$ROOT")" = / ]; } && [ "${CODEX_REVIEW_ALLOW_HOME:-}" != 1 ]; then
+  echo "[codex-review] refusing to review: the project root would be $ROOT, so Codex would search that whole folder." >&2
+  echo "[codex-review] Start Claude inside the project the plan is for (or set CODEX_REVIEW_ALLOW_HOME=1)." >&2
+  exit 7
+fi
 REVIEW_DIR="$ROOT/.claude/plans"; mkdir -p "$REVIEW_DIR"
 BASE=$(basename "$PLAN" .md)
 REVIEW=$REVIEW_DIR/$BASE.review-r${ROUND}.md
@@ -112,17 +122,27 @@ if ! herdr agent get "$AGENT" >/dev/null 2>&1; then
   herdr agent wait "$AGENT" --timeout 120000 >/dev/null 2>&1 || true
 fi
 
+info()   { herdr agent get "$AGENT" 2>/dev/null; }
+status() { info | jq -r '.result.agent.agent_status // "unknown"'; }
+# The reviewer's screen. Read the pane itself: an agent read can come back empty while Codex
+# is still at a startup dialog.
+screen() {
+  local pane; pane=$(info | jq -r '.result.agent.pane_id // empty')
+  { [ -n "$pane" ] && herdr pane read "$pane" --source visible --lines 60 2>/dev/null; } \
+    || herdr agent read "$AGENT" --source recent-unwrapped --lines 60 2>/dev/null || true
+}
+# Codex asks once per folder whether to trust it. herdr may report that dialog as "unknown"
+# rather than "blocked", so look at the screen too.
+trust_prompt() { grep -qi 'trust this folder' <<<"$(screen)"; }
 # Explain a blocked reviewer. A folder-trust prompt is the person's decision, never answer it here.
 explain_block() {
-  local screen; screen=$(herdr agent read "$AGENT" --source recent-unwrapped --lines 40 2>/dev/null || true)
-  printf '%s\n' "$screen" >&2
-  if grep -qi 'trust this folder' <<<"$screen"; then
+  local text; text=$(screen)
+  printf '%s\n' "$text" >&2
+  if grep -qi 'trust this folder' <<<"$text"; then
     echo "[codex-review] Codex has not seen this folder before and asks whether to trust it." >&2
     echo "[codex-review] Ask the user to choose in the '$AGENT' pane, then run this round again." >&2
   fi
 }
-info()   { herdr agent get "$AGENT" 2>/dev/null; }
-status() { info | jq -r '.result.agent.agent_status // "unknown"'; }
 
 # Codex's on-disk transcript for this session; its task_complete events carry each turn's final reply.
 transcript() {
@@ -135,7 +155,8 @@ last_reply() {
   jq -rs '[.[] | select(.payload.type? == "task_complete")] | last | .payload.last_agent_message // empty' "$f"
 }
 
-if [ "$(status)" = blocked ]; then
+# Never type the prompt into a dialog: Enter would pick its highlighted option (e.g. "Trust and continue").
+if [ "$(status)" = blocked ] || trust_prompt; then
   echo "[codex-review] reviewer '$AGENT' is waiting at a dialog; resolve it in its pane, then re-run." >&2
   explain_block; exit 3
 fi
@@ -171,6 +192,7 @@ while [ "$(date +%s)" -lt "$deadline" ]; do
       explain_block; exit 3 ;;
     working) idle_since=; herdr agent wait "$AGENT" --timeout 30000 >/dev/null 2>&1 || true ;;
     *)
+      trust_prompt && { echo "[codex-review] reviewer '$AGENT' is waiting at a dialog:" >&2; explain_block; exit 3; }
       # Idle with no answer for a while: the prompt probably never landed. Don't wait 15 minutes.
       idle_since=${idle_since:-$(date +%s)}
       [ $(( $(date +%s) - idle_since )) -ge "$IDLE_GIVE_UP_S" ] && break
@@ -178,5 +200,5 @@ while [ "$(date +%s)" -lt "$deadline" ]; do
   esac
 done
 echo "[codex-review] no review came back; last reviewer output:" >&2
-herdr agent read "$AGENT" --source recent-unwrapped --lines 150 >&2 || true
+screen >&2
 exit 4

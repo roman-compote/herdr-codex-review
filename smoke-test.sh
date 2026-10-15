@@ -53,6 +53,11 @@ run_round
 # Codex asks whether to trust a folder it hasn't seen. This folder was created by this test
 # a moment ago, so trusting it is safe: pick "Trust and continue" and run the round again.
 if grep -q 'Trust this folder' <<<"$out"; then
+  # The script must stop at the dialog (exit 3) with a hint, without typing anything into it.
+  if ! grep -q "SMOKE${n}_RC=3" <<<"$out" || ! grep -q 'has not seen this folder before' <<<"$out"; then
+    echo "$out"; echo; echo "FAIL: trust dialog was not reported with exit 3 and a hint"; exit 1
+  fi
+  echo "OK: trust dialog reported with exit 3 and a hint, nothing typed into it."
   echo "Codex asked to trust the throwaway test folder; accepting for this folder only and retrying..."
   herdr --session "$SESSION" agent send-keys "codex-review-$(tr ':' '-' <<<"$PANE" | tr 'A-Z' 'a-z')" enter >/dev/null
   sleep 3

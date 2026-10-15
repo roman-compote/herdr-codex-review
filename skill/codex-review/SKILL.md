@@ -11,6 +11,8 @@ Do not implement anything in this skill. The output is a reviewed plan.
 
 ## 1. Draft the plan
 
+0. The plan must belong to a project. If the current directory is the home folder (`~`) or otherwise not
+   a project, ask the user which project the plan is for, and work and save the plan there.
 1. Understand the task: read the relevant code, configs and docs first. Ask the user only about things
    the code cannot tell you.
 2. Write the plan to `<repo-root>/.claude/plans/<YYYY-MM-DD>-<short-slug>.md`
@@ -42,6 +44,9 @@ a second round while one is running.
 - Exit codes: `3` Codex is stuck at a dialog in its pane → show the user what the script printed and
   ask; never answer the dialog yourself. `4` no review came back, `5` Codex could not start,
   `6` a dependency is missing → show the output to the user and ask how to proceed.
+  `7` the project root would be the home folder → ask the user which project the plan belongs to.
+  For a folder-trust dialog (exit 3), tell the user it appears once per repo: they pick
+  *Trust and continue* (or *Quit*) in the Codex pane, then you run the round again.
 
 ## 3. Triage and revise
 

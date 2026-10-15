@@ -57,7 +57,7 @@ To update: `git pull && ./install.sh`. The previous version is moved to `~/.clau
 
 ## Use
 
-Start `herdr`, run `claude` in a pane, and ask:
+Start `herdr`, run `claude` in a pane **inside the project you're planning for**, and ask:
 
 > Prepare a plan for adding rate limiting to the public API.
 
@@ -72,6 +72,7 @@ whether to trust the folder; you answer that yourself.
 | `CODEX_REVIEW_AGENT` | `codex-review-<pane>` | herdr agent name of the reviewer |
 | `CODEX_REVIEW_TIMEOUT_MS` | `900000` (15 min) | Max time per review round |
 | `CODEX_REVIEW_CODEX_ARGS` | empty | Extra Codex args, e.g. `-m <model>` |
+| `CODEX_REVIEW_ALLOW_HOME` | unset | Set to `1` to allow your home folder as the project root (refused by default: Codex would search all of it) |
 
 ## Safety
 
@@ -96,6 +97,7 @@ Tested on macOS with herdr 0.9.0, codex-cli 0.162.1 and Claude Code 2.1. It shou
 | `skill/codex-review/scripts/codex-review.sh` | Starts/reuses the Codex pane, sends the plan, collects the review |
 | `install.sh` | Checks prerequisites, installs or updates the skill, optional permissions |
 | `smoke-test.sh` | End-to-end check in a throwaway herdr session; cleans up after itself |
+| `CHANGELOG.md` | What changed in each version |
 | `SETUP.md` | Step-by-step install guide written for an AI agent |
 
 ## License
