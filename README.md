@@ -38,7 +38,7 @@ between rounds).
 **Or by hand:**
 
 ```bash
-git clone https://github.com/<owner>/herdr-codex-review.git
+git clone https://github.com/roman-compote/herdr-codex-review.git
 cd herdr-codex-review
 ./install.sh --permissions   # installs ~/.claude/skills/codex-review + two Bash allow rules (backup kept)
 ./smoke-test.sh              # optional: one real review in a throwaway herdr session → PASS
