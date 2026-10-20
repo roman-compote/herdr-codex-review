@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.2
+- codex-cli 0.163 asks the person to approve hooks before they run, which includes herdr's own
+  agent-state hook. The script didn't recognise that screen and typed the prompt into it.
+  It now stops with exit 3 and a hint, as it does for the folder-trust dialog.
+- `smoke-test.sh` fails with a clear message when a hook needs approval. It never approves hooks itself.
+
 ## 1.0.1
 - Never sends the review prompt into a Codex dialog. herdr can report Codex's first-run
   "Trust this folder?" dialog as `unknown` instead of `blocked`, and Enter would have accepted it.

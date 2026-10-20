@@ -86,7 +86,8 @@ whether to trust the folder; you answer that yourself.
 
 ## Compatibility
 
-Tested on macOS with herdr 0.9.0, codex-cli 0.162.1 and Claude Code 2.1. It should work on Linux
+Tested on macOS with herdr 0.9.0–0.9.5, codex-cli 0.162.1–0.163.0 and Claude Code 2.1. From codex-cli
+0.163, Codex asks once before it runs a hook (herdr's included): run `codex` once and approve it. It should work on Linux
 (plain bash, awk and jq), but that hasn't been tested yet. Reports and PRs are welcome.
 
 ## Files

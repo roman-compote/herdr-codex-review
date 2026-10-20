@@ -27,7 +27,9 @@ Repo contents: `skill/codex-review/` (the skill), `install.sh`, `smoke-test.sh`,
 for t in claude codex herdr jq git; do printf '%-7s ' $t; command -v $t >/dev/null && ($t --version 2>/dev/null | head -1) || echo MISSING; done
 ```
 
-Versions this was tested with: herdr 0.9.0, codex-cli 0.162.1, current Claude Code, on macOS.
+Versions this was tested with: herdr 0.9.0–0.9.5, codex-cli 0.162.1–0.163.0, current Claude Code, on macOS.
+With codex-cli 0.163+, Codex asks once before it runs a hook, including herdr's own. Have the person
+run `codex` once and approve it before step 5.
 Older versions may work; herdr must have `agent start/prompt/read` (`herdr agent --help`).
 
 If something is missing, tell the person and propose an install command. Don't install without asking.
@@ -129,6 +131,7 @@ Tell the person:
 | "not inside herdr; running one-shot codex exec" | Claude wasn't started from a herdr pane (`echo $HERDR_ENV` should print `1`). It still works, but without a pane or memory between rounds. |
 | Exit 5, `app server did not become ready` | The Codex background server failed. The script already passes `--no-daemon` when Codex supports it; check that `codex --no-daemon` starts by hand. Also check you're not running inside a sandbox. |
 | Exit 3, "Codex has not seen this folder before" | Expected the first time in each repo. The person picks *Trust and continue* (or *Quit*) in the Codex pane, then Claude re-runs the round. To avoid it, run `codex` once in the repo beforehand. |
+| Exit 3, "Codex wants a hook approved" | Codex 0.163+ asks once before running a hook, e.g. herdr's agent-state hook in `~/.codex/hooks.json`. The person reviews it in the Codex pane (`t` trusts all, Enter reviews), then Claude re-runs the round. To avoid it, run `codex` once after `herdr integration install codex`. |
 | Exit 3, other dialog | Codex is waiting in its pane (e.g. login). The person handles it, then Claude re-runs the round. |
 | Exit 4, "no review came back" | Codex never answered (e.g. hit its usage limit). Look at the Codex pane. |
 | Exit 6 | A dependency is missing from PATH. |

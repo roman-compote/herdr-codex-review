@@ -47,6 +47,8 @@ a second round while one is running.
   `7` the project root would be the home folder → ask the user which project the plan belongs to.
   For a folder-trust dialog (exit 3), tell the user it appears once per repo: they pick
   *Trust and continue* (or *Quit*) in the Codex pane, then you run the round again.
+  For a hook-review dialog (exit 3, Codex 0.163+), the user reviews the hook in the Codex pane
+  (`t` trusts all, Enter reviews them one by one), then you run the round again.
 
 ## 3. Triage and revise
 

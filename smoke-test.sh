@@ -64,6 +64,11 @@ if grep -q 'Trust this folder' <<<"$out"; then
   run_round
 fi
 echo "$out" | sed -n '/\[codex-review\]/,$p'
+# Hooks are the person's own config, not something this test created: never approve them here.
+if grep -qiE 'needs? review before (it|they) can run' <<<"$out"; then
+  echo; echo "FAIL: Codex wants a hook approved first. Run 'codex' once, review the hook ('t' trusts all), then re-run this test."
+  exit 1
+fi
 
 rc=$(echo "$out" | grep -o "SMOKE${n}_RC=[0-9]*" | tail -1 | cut -d= -f2)
 review=$WORK/.claude/plans/smoke.review-r1.md

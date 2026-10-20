@@ -131,16 +131,20 @@ screen() {
   { [ -n "$pane" ] && herdr pane read "$pane" --source visible --lines 60 2>/dev/null; } \
     || herdr agent read "$AGENT" --source recent-unwrapped --lines 60 2>/dev/null || true
 }
-# Codex asks once per folder whether to trust it. herdr may report that dialog as "unknown"
-# rather than "blocked", so look at the screen too.
-trust_prompt() { grep -qi 'trust this folder' <<<"$(screen)"; }
-# Explain a blocked reviewer. A folder-trust prompt is the person's decision, never answer it here.
+# Codex asks once per folder whether to trust it, and (since 0.163) once per hook whether to run it.
+# herdr may report these dialogs as "unknown" rather than "blocked", so look at the screen too.
+DIALOG_RE='trust this folder|needs? review before (it|they) can run'
+dialog_prompt() { grep -qiE "$DIALOG_RE" <<<"$(screen)"; }
+# Explain a blocked reviewer. Trusting a folder or a hook is the person's decision, never answer it here.
 explain_block() {
   local text; text=$(screen)
   printf '%s\n' "$text" >&2
   if grep -qi 'trust this folder' <<<"$text"; then
     echo "[codex-review] Codex has not seen this folder before and asks whether to trust it." >&2
     echo "[codex-review] Ask the user to choose in the '$AGENT' pane, then run this round again." >&2
+  elif grep -qiE 'needs? review before (it|they) can run' <<<"$text"; then
+    echo "[codex-review] Codex wants a hook approved before it runs (e.g. herdr's agent-state hook in ~/.codex/hooks.json)." >&2
+    echo "[codex-review] Ask the user to review it in the '$AGENT' pane ('t' trusts all, Enter reviews), then run this round again." >&2
   fi
 }
 
@@ -156,7 +160,7 @@ last_reply() {
 }
 
 # Never type the prompt into a dialog: Enter would pick its highlighted option (e.g. "Trust and continue").
-if [ "$(status)" = blocked ] || trust_prompt; then
+if [ "$(status)" = blocked ] || dialog_prompt; then
   echo "[codex-review] reviewer '$AGENT' is waiting at a dialog; resolve it in its pane, then re-run." >&2
   explain_block; exit 3
 fi
@@ -192,7 +196,7 @@ while [ "$(date +%s)" -lt "$deadline" ]; do
       explain_block; exit 3 ;;
     working) idle_since=; herdr agent wait "$AGENT" --timeout 30000 >/dev/null 2>&1 || true ;;
     *)
-      trust_prompt && { echo "[codex-review] reviewer '$AGENT' is waiting at a dialog:" >&2; explain_block; exit 3; }
+      dialog_prompt && { echo "[codex-review] reviewer '$AGENT' is waiting at a dialog:" >&2; explain_block; exit 3; }
       # Idle with no answer for a while: the prompt probably never landed. Don't wait 15 minutes.
       idle_since=${idle_since:-$(date +%s)}
       [ $(( $(date +%s) - idle_since )) -ge "$IDLE_GIVE_UP_S" ] && break
