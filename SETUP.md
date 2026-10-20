@@ -132,6 +132,7 @@ Tell the person:
 | Exit 5, `app server did not become ready` | The Codex background server failed. The script already passes `--no-daemon` when Codex supports it; check that `codex --no-daemon` starts by hand. Also check you're not running inside a sandbox. |
 | Exit 3, "Codex has not seen this folder before" | Expected the first time in each repo. The person picks *Trust and continue* (or *Quit*) in the Codex pane, then Claude re-runs the round. To avoid it, run `codex` once in the repo beforehand. |
 | Exit 3, "Codex wants a hook approved" | Codex 0.163+ asks once before running a hook, e.g. herdr's agent-state hook in `~/.codex/hooks.json`. The person reviews it in the Codex pane (`t` trusts all, Enter reviews), then Claude re-runs the round. To avoid it, run `codex` once after `herdr integration install codex`. |
+| Review says Codex couldn't read files, e.g. "timed out negotiating with the code-mode host" | Codex's own tools fail, which isn't caused by this skill. Seen with the Homebrew cask of codex-cli 0.163.0 on a Mac mini: every shell call timed out, while the standalone install worked. Check with `codex exec -s read-only --skip-git-repo-check 'Run: ls'`. Fix: use Codex's standalone install instead of the cask. |
 | Exit 3, other dialog | Codex is waiting in its pane (e.g. login). The person handles it, then Claude re-runs the round. |
 | Exit 4, "no review came back" | Codex never answered (e.g. hit its usage limit). Look at the Codex pane. |
 | Exit 6 | A dependency is missing from PATH. |

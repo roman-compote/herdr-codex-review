@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.3
+- `smoke-test.sh` no longer passes on a review that never mentions the code. Codex returned a
+  Verdict even though all its tools had failed ("timed out negotiating with the code-mode host").
+- SETUP.md: troubleshooting entry for Codex tools failing (Homebrew cask of codex-cli 0.163.0).
+
 ## 1.0.2
 - codex-cli 0.163 asks the person to approve hooks before they run, which includes herdr's own
   agent-state hook. The script didn't recognise that screen and typed the prompt into it.

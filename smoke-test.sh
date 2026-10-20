@@ -75,8 +75,15 @@ review=$WORK/.claude/plans/smoke.review-r1.md
 changed=$(git -C "$WORK" status --porcelain | grep -v '^?? .claude/plans/smoke.review-r1.md$' || true)
 
 echo
-if [ "$rc" = 0 ] && grep -q '^## Verdict' "$review" 2>/dev/null && [ -z "$changed" ]; then
+# A real review of this plan talks about the code. A review that only says Codex couldn't read
+# anything (e.g. its tools failed) still has a Verdict, so check for the code too.
+grounded=$(grep -qiE 'divide|calc\.py' "$review" 2>/dev/null && echo yes || echo no)
+if [ "$rc" = 0 ] && grep -q '^## Verdict' "$review" 2>/dev/null && [ "$grounded" = yes ] && [ -z "$changed" ]; then
   echo "PASS: Codex reviewed the plan, the review was saved, and no other file changed."
+elif [ "$rc" = 0 ] && [ "$grounded" = no ]; then
+  echo "FAIL: a review came back but never mentions the code, so Codex probably couldn't read the repo."
+  echo "Check that its tools work: codex exec -s read-only --skip-git-repo-check 'Run: ls'"
+  exit 1
 else
   echo "FAIL: rc=${rc:-none}, review present: $([ -f "$review" ] && echo yes || echo no), other changes: ${changed:-none}"
   exit 1
