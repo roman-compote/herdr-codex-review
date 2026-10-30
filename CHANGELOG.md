@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.4
+- Fixed: the one-shot `codex exec` fallback (outside herdr) could hang forever. `codex exec` reads
+  stdin whenever it isn't a terminal and waits for it to close before starting. Launched from a
+  background shell (as Claude Code's Bash tool does), stdin can be a socket that never closes:
+  no CPU, no network, no log line. The script now gives `codex exec` `</dev/null` as stdin.
+  Reproduced with an open pipe (hangs) versus a closed one or `/dev/null` (answers in seconds).
+
 ## 1.0.3
 - `smoke-test.sh` no longer passes on a review that never mentions the code. Codex returned a
   Verdict even though all its tools had failed ("timed out negotiating with the code-mode host").

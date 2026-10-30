@@ -95,7 +95,7 @@ finish() { echo "[codex-review] review: $REVIEW"; cat "$REVIEW"; exit 0; }
 if [ "${HERDR_ENV:-}" != 1 ]; then
   echo "[codex-review] not inside herdr; running one-shot codex exec (no session memory between rounds)" >&2
   OUT=$(mktemp)
-  codex exec -C "$ROOT" -s read-only --skip-git-repo-check -o "$OUT" "$PROMPT" >/dev/null 2>&1 || true
+  codex exec -C "$ROOT" -s read-only --skip-git-repo-check -o "$OUT" "$PROMPT" </dev/null >/dev/null 2>&1 || true
   reply=$(cat "$OUT" 2>/dev/null || true)
   save_review "$reply" || save_raw "$reply" || { rm -f "$OUT"; echo "codex exec produced no review" >&2; exit 4; }
   rm -f "$OUT"; finish
